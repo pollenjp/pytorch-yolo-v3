@@ -24,7 +24,7 @@ def convert2cpu(matrix):
 
 def predict_transform(prediction, inp_dim, anchors, num_classes, CUDA = True):
     """
-    | prediction  | torch.Tensor | size=(batch, channel,coordinate_y,coordinate_x)
+    | prediction  | torch.Tensor | size=(batch,channel,coordinate_y,coordinate_x)
     | inp_dim     | int          |
     | anchors     |
     | num_classes |
