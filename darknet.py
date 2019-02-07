@@ -305,6 +305,10 @@ class Darknet(nn.Module):
 
                 
     def forward(self, x, CUDA):
+        """
+        | x    | torch.Tensor | size=(batch, channel,coordinate_y,coordinate_x)
+        | CUDA | bool         |
+        """
         detections = []
         modules = self.blocks[1:]
         outputs = {}   #We cache the outputs for the route layer

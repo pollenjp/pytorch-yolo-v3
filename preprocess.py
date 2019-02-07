@@ -38,7 +38,14 @@ def prep_image(img, inp_dim):
     orig_im = cv2.imread(img)
     dim = orig_im.shape[1], orig_im.shape[0]
     img = (letterbox_image(orig_im, (inp_dim, inp_dim)))
+
+    # BGR=>RGB
+    # 第0軸:カラーチャネル,第1軸:y座標,第2軸:x座標に変換
     img_ = img[:,:,::-1].transpose((2,0,1)).copy()
+
+    # normalize
+    # unsqueeze for torch.cat
+    # float() : https://pytorch.org/docs/stable/tensors.html#torch.Tensor.float
     img_ = torch.from_numpy(img_).float().div(255.0).unsqueeze(0)
     return img_, orig_im, dim
 

@@ -33,11 +33,15 @@ def get_test_input(input_dim, CUDA):
     img = cv2.imread("dog-cycle-car.png")
     img = cv2.resize(img, (input_dim, input_dim)) 
     img_ =  img[:,:,::-1].transpose((2,0,1))
-    img_ = img_[np.newaxis,:,:,:]/255.0
+    img_ = img_[np.newaxis,:,:,:]/255.0  # おそらくbatch用の軸を追加
     img_ = torch.from_numpy(img_).float()
+    # 以下の1行はVariableがTensorに統合されたことで必要なくなった？
+    # [pytorch 0.4の変更点 - Qiita](https://qiita.com/vintersnow/items/91545c27e2003f62ebc4)
     img_ = Variable(img_)
     
     if CUDA:
+        # CUDA上のメモリにコピー
+        # https://pytorch.org/docs/stable/tensors.html#torch.Tensor.cuda
         img_ = img_.cuda()
     num_classes
     return img_
@@ -112,6 +116,7 @@ if __name__ ==  '__main__':
     num_classes = 80
     classes = load_classes('data/coco.names') 
 
+    #===========================================================================
     #Set up the neural network
     print("Loading network.....")
     model = Darknet(args.cfgfile)
@@ -132,9 +137,17 @@ if __name__ ==  '__main__':
     model.eval()
     
     read_dir = time.time()
+    #===========================================================================
     #Detection phase
+    # 予測画像ファイルパスを取得
     try:
-        imlist = [osp.join(osp.realpath('.'), images, img) for img in os.listdir(images) if os.path.splitext(img)[1] == '.png' or os.path.splitext(img)[1] =='.jpeg' or os.path.splitext(img)[1] =='.jpg']
+        imlist = [
+            osp.join(osp.realpath('.'), images, img)
+            for img in os.listdir(images)
+            if os.path.splitext(img)[1] == '.png'
+                or os.path.splitext(img)[1] =='.jpeg'
+                or os.path.splitext(img)[1] =='.jpg'
+        ]
     except NotADirectoryError:
         imlist = []
         imlist.append(osp.join(osp.realpath('.'), images))
@@ -147,6 +160,7 @@ if __name__ ==  '__main__':
         
     load_batch = time.time()
     
+    # 予測画像読み込みと前処理
     batches = list(map(prep_image, imlist, [inp_dim for x in range(len(imlist))]))
     im_batches = [x[0] for x in batches]
     orig_ims = [x[1] for x in batches]
@@ -158,14 +172,19 @@ if __name__ ==  '__main__':
     if CUDA:
         im_dim_list = im_dim_list.cuda()
     
+    # バッチサイズで割り切れるかどうかのフラグ
     leftover = 0
     
     if (len(im_dim_list) % batch_size):
+        # バッチサイズで割り切れなければフラグを立てる
         leftover = 1
         
         
     if batch_size != 1:
+        # im_batch がバッチサイズでで割り切れるかどうかで num_batches の値が leftover 分かわる
         num_batches = len(imlist) // batch_size + leftover            
+        # バッチサイズごとに分けたlistとして im_batches に格納
+        # min() を使った処理はlistの最後のインデックスでエラーが出ないように処理
         im_batches = [torch.cat((im_batches[i*batch_size : min((i +  1)*batch_size,
                             len(im_batches))]))  for i in range(num_batches)]        
 
@@ -173,6 +192,7 @@ if __name__ ==  '__main__':
     i = 0
     
 
+    #===========================================================================
     write = False
     model(get_test_input(inp_dim, CUDA), CUDA)
     
