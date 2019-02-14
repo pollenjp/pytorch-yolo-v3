@@ -258,12 +258,14 @@ def create_modules(blocks):
         
         #Yolo is the detection layer
         elif x["type"] == "yolo":
-            mask = x["mask"].split(",")
-            mask = [int(x) for x in mask]
+            #mask = x["mask"].split(",")
+            #mask = [int(x) for x in mask]
+            mask = list(map(int, x["mask"].split(",")))  # たぶんこれと同じ @pollenjp
             
             
-            anchors = x["anchors"].split(",")
-            anchors = [int(a) for a in anchors]
+            #anchors = x["anchors"].split(",")
+            #anchors = [int(a) for a in anchors]
+            anchors = list(map(int, x["anchors"].split(",")))  # たぶんこれと同じ @pollenjp
             anchors = [(anchors[i], anchors[i+1]) for i in range(0, len(anchors),2)]
             anchors = [anchors[i] for i in mask]
             
@@ -306,7 +308,7 @@ class Darknet(nn.Module):
                 
     def forward(self, x, CUDA):
         """
-        | x    | torch.Tensor | size=(batch,channel,coordinate_y,coordinate_x)
+        | x    | torch.Tensor | size=(batch,channel,height,width)
         | CUDA | bool         |
         """
         detections = []
@@ -354,16 +356,25 @@ class Darknet(nn.Module):
             
             elif module_type == 'yolo':        
                 
+                # anchors
+                # yolo_82  | [(116,90),  (156,198),  (373,326)]
+                # yolo_94  | [( 30,61),  ( 62, 45),  ( 59,119)]
+                # yolo_106 | [( 10,13),  ( 16, 30),  ( 33, 23)]
                 anchors = self.module_list[i][0].anchors
                 #Get the input dimensions
                 inp_dim = int (self.net_info["height"])
                 
                 #Get the number of classes
+                # classes=80 (MS COCO)
                 num_classes = int (modules[i]["classes"])
                 
                 #Output the result
                 x = x.data
-                x = predict_transform(x, inp_dim, anchors, num_classes, CUDA)
+                x = predict_transform(prediction=x,
+                                      inp_dim=inp_dim,
+                                      anchors=anchors,
+                                      num_classes=num_classes,
+                                      CUDA=CUDA)
                 
                 if type(x) == int:
                     continue
@@ -371,7 +382,7 @@ class Darknet(nn.Module):
                 
                 if not write:
                     detections = x
-                    write = 1
+                    write = 1  # 一度書き込んだかどうかのフラグ
                 
                 else:
                     detections = torch.cat((detections, x), 1)

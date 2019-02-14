@@ -162,8 +162,12 @@ if __name__ ==  '__main__':
     
     # 予測画像読み込みと前処理
     batches = list(map(prep_image, imlist, [inp_dim for x in range(len(imlist))]))
-    im_batches = [x[0] for x in batches]
-    orig_ims = [x[1] for x in batches]
+    # batches[i] : img_, orig_im, dim
+    # | img_    | torch.array | トランスポーズと正規化を終えたtorch行列 (画像のアスペクト比は変更せずにリサイズ)
+    # | orig_im | np.array    | cv2.imreadしたもの
+    # | dim     | tuple       | (width, height)
+    im_batches  = [x[0] for x in batches]
+    orig_ims    = [x[1] for x in batches]
     im_dim_list = [x[2] for x in batches]
     im_dim_list = torch.FloatTensor(im_dim_list).repeat(1,2)
     
@@ -185,8 +189,15 @@ if __name__ ==  '__main__':
         num_batches = len(imlist) // batch_size + leftover            
         # バッチサイズごとに分けたlistとして im_batches に格納
         # min() を使った処理はlistの最後のインデックスでエラーが出ないように処理
-        im_batches = [torch.cat((im_batches[i*batch_size : min((i +  1)*batch_size,
-                            len(im_batches))]))  for i in range(num_batches)]        
+        # ??? これ合ってる？
+        im_batches = [
+            torch.cat(
+                tensors=(
+                    im_batches[i*batch_size : min((i +  1)*batch_size,len(im_batches))]
+                )
+             )
+            for i in range(num_batches)
+        ]
 
 
     i = 0
@@ -248,6 +259,8 @@ if __name__ ==  '__main__':
             
           
         if not write:
+            #output = []
+            #output.append(prediction)
             output = prediction
             write = 1
         else:
@@ -289,8 +302,8 @@ if __name__ ==  '__main__':
     for i in range(output.shape[0]):
         output[i, [1,3]] = torch.clamp(output[i, [1,3]], 0.0, im_dim_list[i,0])
         output[i, [2,4]] = torch.clamp(output[i, [2,4]], 0.0, im_dim_list[i,1])
-        
-        
+
+
     output_recast = time.time()
     
     
@@ -303,6 +316,11 @@ if __name__ ==  '__main__':
 
 
     def write(x, batches, results):
+        """
+        | x       | one element of output list
+        | batches | batch size
+        | results | 
+        """
         c1 = tuple(x[1:3].int())
         c2 = tuple(x[3:5].int())
         img = results[int(x[0])]

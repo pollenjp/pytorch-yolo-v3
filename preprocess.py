@@ -32,7 +32,14 @@ def prep_image(img, inp_dim):
     """
     Prepare image for inputting to the neural network. 
     
+    resize image with unchanged aspect ratio using padding
+
     Returns a Variable 
+
+    | Returns
+    | img_    | torch.array | トランスポーズと正規化を終えたtorch行列 (画像のアスペクト比は変更せずにリサイズ)
+    | orig_im | np.array    | cv2.imreadしたもの
+    | dim     | tuple       | (width, height)
     """
 
     orig_im = cv2.imread(img)
@@ -40,7 +47,7 @@ def prep_image(img, inp_dim):
     img = (letterbox_image(orig_im, (inp_dim, inp_dim)))
 
     # BGR=>RGB
-    # 第0軸:カラーチャネル,第1軸:y座標,第2軸:x座標に変換
+    # 第0軸:カラーチャネル,第1軸:height(y座標),第2軸:width(x座標に変換)
     img_ = img[:,:,::-1].transpose((2,0,1)).copy()
 
     # normalize

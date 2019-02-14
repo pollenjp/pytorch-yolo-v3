@@ -24,18 +24,23 @@ def convert2cpu(matrix):
 
 def predict_transform(prediction, inp_dim, anchors, num_classes, CUDA = True):
     """
-    | prediction  | torch.Tensor | size=(batch,channel,coordinate_y,coordinate_x)
+    | prediction  | torch.Tensor | size=(batch,channel,height,width)
     | inp_dim     | int          |
     | anchors     |
     | num_classes |
     | CUDA        | bool
     """
     batch_size = prediction.size(0)
-    stride =  inp_dim // prediction.size(2)
-    grid_size = inp_dim // stride
-    bbox_attrs = 5 + num_classes
-    num_anchors = len(anchors)
+    # ideal_height // picture_height
+    stride      =  inp_dim // prediction.size(2)
+    grid_size   = inp_dim // stride
+    bbox_attrs  = 5 + num_classes
+    num_anchors = len(anchors)  # 3
     
+    # anchors
+    # yolo_82  | [(116,90),  (156,198),  (373,326)]
+    # yolo_94  | [( 30,61),  ( 62, 45),  ( 59,119)]
+    # yolo_106 | [( 10,13),  ( 16, 30),  ( 33, 23)]
     anchors = [(a[0]/stride, a[1]/stride) for a in anchors]
 
 
