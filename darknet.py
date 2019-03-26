@@ -385,6 +385,7 @@ class Darknet(nn.Module):
                     write = 1  # 一度書き込んだかどうかのフラグ
                 
                 else:
+                    # concatenate along channel axis
                     detections = torch.cat((detections, x), 1)
                 
                 outputs[i] = outputs[i-1]

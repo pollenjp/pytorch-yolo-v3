@@ -132,10 +132,14 @@ if __name__ ==  '__main__':
     if CUDA:
         model.cuda()
     
-    
+    #===========================================================================
+    # save model param
+    torch.save(model.state_dict(), "./weights.pth")
+    #===========================================================================
+
     #Set the model in evaluation mode
     model.eval()
-    
+
     read_dir = time.time()
     #===========================================================================
     #Detection phase
@@ -191,11 +195,8 @@ if __name__ ==  '__main__':
         # min() を使った処理はlistの最後のインデックスでエラーが出ないように処理
         # ??? これ合ってる？
         im_batches = [
-            torch.cat(
-                tensors=(
-                    im_batches[i*batch_size : min((i +  1)*batch_size,len(im_batches))]
-                )
-             )
+            torch.cat(tensors=(
+                im_batches[i*batch_size : min((i +  1)*batch_size,len(im_batches))]))
             for i in range(num_batches)
         ]
 

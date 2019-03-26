@@ -46,8 +46,8 @@ def prep_image(img, inp_dim):
     dim = orig_im.shape[1], orig_im.shape[0]
     img = (letterbox_image(orig_im, (inp_dim, inp_dim)))
 
-    # BGR=>RGB
-    # 第0軸:カラーチャネル,第1軸:height(y座標),第2軸:width(x座標に変換)
+    # 1. BGR=>RGB
+    # 2. 第0軸:カラーチャネル,第1軸:height(y座標),第2軸:width(x座標に変換)
     img_ = img[:,:,::-1].transpose((2,0,1)).copy()
 
     # normalize
